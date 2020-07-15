@@ -7,105 +7,84 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.zip.CRC32;
 
+// Bless https://examples.javacodegeeks.com/core-java/security/calculate-the-crc-sum-of-a-file/
 public class Hasher {
+
 	public static long checksumInputStream(String filepath) throws IOException {
 
-        InputStream inputStreamn = new FileInputStream(filepath);
+		InputStream inputStreamn = new FileInputStream(filepath);
 
-        CRC32 crc = new CRC32();
+		CRC32 crc = new CRC32();
 
+		int cnt;
 
-        int cnt;
+		while ((cnt = inputStreamn.read()) != -1) {
 
+			crc.update(cnt);
 
+		}
 
-        while ((cnt = inputStreamn.read()) != -1) {
+		return crc.getValue();
+	}
 
+	public static long checksumBufferedInputStream(String filepath) throws IOException {
 
-            crc.update(cnt);
+		InputStream inputStream = new BufferedInputStream(new FileInputStream(filepath));
 
-        }
+		CRC32 crc = new CRC32();
 
-        return crc.getValue();
-    }
+		int cnt;
 
-    public static long checksumBufferedInputStream(String filepath) throws IOException {
+		while ((cnt = inputStream.read()) != -1) {
 
-        InputStream inputStream = new BufferedInputStream(new FileInputStream(filepath));
+			crc.update(cnt);
 
+		}
 
+		return crc.getValue();
+	}
 
-        CRC32 crc = new CRC32();
+	public static long checksumRandomAccessFile(String filepath) throws IOException {
 
+		RandomAccessFile randAccfile = new RandomAccessFile(filepath, "r");
 
-        int cnt;
+		long length = randAccfile.length();
 
+		CRC32 crc = new CRC32();
 
+		for (long i = 0; i < length; i++) {
 
-        while ((cnt = inputStream.read()) != -1) {
+			randAccfile.seek(i);
 
+			int cnt = randAccfile.readByte();
 
-            crc.update(cnt);
+			crc.update(cnt);
 
-        }
+		}
 
-        return crc.getValue();
-    }
+		return crc.getValue();
+	}
 
-    public static long checksumRandomAccessFile(String filepath) throws IOException {
+	public static long checksumMappedFile(String filepath) throws IOException {
 
-        RandomAccessFile randAccfile = new RandomAccessFile(filepath, "r");
+		FileInputStream inputStream = new FileInputStream(filepath);
 
-        long length = randAccfile.length();
+		FileChannel fileChannel = inputStream.getChannel();
 
-        CRC32 crc = new CRC32();
+		int len = (int) fileChannel.size();
 
+		MappedByteBuffer buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, len);
 
-        for (long i = 0; i < length; i++) {
+		CRC32 crc = new CRC32();
 
+		for (int cnt = 0; cnt < len; cnt++) {
 
-            randAccfile.seek(i);
+			int i = buffer.get(cnt);
 
+			crc.update(i);
 
-            int cnt = randAccfile.readByte();
+		}
 
-
-            crc.update(cnt);
-
-        }
-
-        return crc.getValue();
-    }
-
-    public static long checksumMappedFile(String filepath) throws IOException {
-
-        FileInputStream inputStream = new FileInputStream(filepath);
-
-        FileChannel fileChannel = inputStream.getChannel();
-
-
-        int len = (int) fileChannel.size();
-
-
-        MappedByteBuffer buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, len);
-
-
-        CRC32 crc = new CRC32();
-
-
-        for (int cnt = 0; cnt < len; cnt++) {
-
-
-
-
-
-            int i = buffer.get(cnt);
-
-
-            crc.update(i);
-
-        }
-
-        return crc.getValue();
-    }
+		return crc.getValue();
+	}
 }

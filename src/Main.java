@@ -19,13 +19,13 @@ public class Main {
 		String originalPath = "";
 		String transferToPath = "";
 		Scanner input = new Scanner(System.in);
-		
+
 		System.out.println("Please enter the path of the folder which you want to transfer: ");
 		originalPath = input.nextLine();
-		
+
 		System.out.println("Please enter the path of the transfer destination: ");
 		transferToPath = input.nextLine();
-		
+
 		ItemTracker it = new ItemTracker(originalPath, transferToPath);
 		try {
 			it.detectDifference();
@@ -33,10 +33,12 @@ public class Main {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 //		it.printNewFiles();
+		TransferManager tm = new TransferManager(originalPath, transferToPath);
+		tm.transferFiles(it.getFilesToTransfer());
 	}
-	
+
 	static void println(String s) {
 		System.out.println(s);
 	}
