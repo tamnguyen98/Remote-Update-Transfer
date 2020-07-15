@@ -31,4 +31,8 @@ public class TransferManager {
 			}
 		}
 	}
+
+	private void remoteTransfer(ArrayList<Path> files) {
+		// TODO: make function and public
+	}
 }

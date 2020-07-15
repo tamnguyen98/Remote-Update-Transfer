@@ -51,7 +51,7 @@ public class Traverser implements FileVisitor<Path> {
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			System.out.printf("Error with visit to file %s: %s\n", file.toFile().getName(), e.toString());
+			System.err.printf("Error with visit to file %s: %s\n", file.toFile().getName(), e.toString());
 		}
 		return FileVisitResult.CONTINUE;
 	}
@@ -78,13 +78,13 @@ public class Traverser implements FileVisitor<Path> {
 
 	public HashMap<String, Path> getHashMap() {
 		if (this._emptyMap)
-			System.out.println("Hashmap empty");
+			System.err.println("Hashmap empty");
 		return this._compareToFiles;
 	}
 
 	public ArrayList<Path> getNewFiles() {
 		if (this._newFiles.isEmpty())
-			System.out.println("ArrayList empty");
+			System.err.println("ArrayList empty");
 		return this._newFiles;
 	}
 

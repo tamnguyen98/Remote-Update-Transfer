@@ -13,7 +13,7 @@ public class ItemTracker {
 	public ItemTracker(String src, String dest) {
 		this._src = src;
 		this._dest = dest;
-		println(src + "|" + dest);
+		println(src + "->" + dest);
 		this._newFiles = new HashMap<String, Path>();
 		_filesToTransfer = new ArrayList<Path>();
 	}
@@ -34,14 +34,14 @@ public class ItemTracker {
 		Files.walkFileTree(Paths.get(this._dest), dest);
 
 		this._newFiles = dest.getHashMap();
-		System.out.printf("HashMap size: %d\n", this._newFiles.size());
+//		System.out.printf("HashMap size: %d\n", this._newFiles.size());
 
 		Traverser src = new Traverser(this._newFiles);
 		Files.walkFileTree(Paths.get(this._src), src);
 
 		this._filesToTransfer = src.getNewFiles();
 
-		System.out.printf("Destination file count: %d\t Src file count: %d\nList size: %d\n", dest.getFileCount(),
+		System.out.printf("Destination file count: %d\t Src file count: %d\nNew file count: %d\n", dest.getFileCount(),
 				src.getFileCount(), this._filesToTransfer.size());
 
 		return !_filesToTransfer.isEmpty();
@@ -61,7 +61,6 @@ public class ItemTracker {
 
 	public void printNewFiles(ArrayList<Path> toPrint) {
 		int i = 0;
-		TransferManager tm = new TransferManager(this._src, this._dest);
 		for (Path s : toPrint) {
 			println(i++ + ": " + s.toString());
 		}

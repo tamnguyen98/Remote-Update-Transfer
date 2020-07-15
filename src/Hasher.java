@@ -12,18 +12,18 @@ public class Hasher {
 
 	public static long checksumInputStream(String filepath) throws IOException {
 
-		InputStream inputStreamn = new FileInputStream(filepath);
+		InputStream inputStream = new FileInputStream(filepath);
 
 		CRC32 crc = new CRC32();
 
 		int cnt;
 
-		while ((cnt = inputStreamn.read()) != -1) {
+		while ((cnt = inputStream.read()) != -1) {
 
 			crc.update(cnt);
 
 		}
-
+		inputStream.close();
 		return crc.getValue();
 	}
 
@@ -40,6 +40,7 @@ public class Hasher {
 			crc.update(cnt);
 
 		}
+		inputStream.close();
 
 		return crc.getValue();
 	}
@@ -61,7 +62,7 @@ public class Hasher {
 			crc.update(cnt);
 
 		}
-
+		randAccfile.close();
 		return crc.getValue();
 	}
 
@@ -84,6 +85,7 @@ public class Hasher {
 			crc.update(i);
 
 		}
+		inputStream.close();
 
 		return crc.getValue();
 	}
