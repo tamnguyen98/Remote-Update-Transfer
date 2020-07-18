@@ -1,4 +1,6 @@
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -38,7 +40,13 @@ public class Main {
 //		it.printNewFiles();
 		if (!it.getFilesToTransfer().isEmpty()) {
 			TransferManager tm = new TransferManager(originalPath, transferToPath);
-			tm.transferFiles(it.getFilesToTransfer());
+			ArrayList<Path> failedTransfers = tm.transferFiles(it.getFilesToTransfer());
+			System.out.println("Retrying failed transfer...");
+			ArrayList<Path> retries = tm.transferFiles(failedTransfers);
+			if (failedTransfers.size() == retries.size()) {
+				System.out.println("Retries failed to transfer the following files:");
+				it.printNewFiles(retries);
+			}
 			println("Progress completed.");
 		} else {
 			System.out.println("No difference in the two directories.");

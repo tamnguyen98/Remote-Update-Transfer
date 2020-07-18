@@ -9,16 +9,18 @@ import java.util.HashMap;
 public class Traverser implements FileVisitor<Path> {
 	private int fileCount;
 	private boolean _emptyMap;
-	private HashMap<String, Path> _compareToFiles;
+	private HashMap<String, Long> _compareToFiles;
 	private ArrayList<Path> _newFiles;
+	private String _rootPath;
 
-	public Traverser(HashMap<String, Path> compareToFiles) {
+	public Traverser(HashMap<String, Long> compareToFiles, String rootpath) {
 		this.fileCount = 0;
 		this._emptyMap = compareToFiles == null;
 		this._compareToFiles = compareToFiles;
 		if (compareToFiles == null)
-			this._compareToFiles = new HashMap<String, Path>();
+			this._compareToFiles = new HashMap<String, Long>();
 		this._newFiles = new ArrayList<Path>();
+		_rootPath = rootpath;
 	}
 
 	@Override
@@ -36,23 +38,31 @@ public class Traverser implements FileVisitor<Path> {
 	@Override
 	public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 		try {
-			String fileHash = getCRC32(file);
+			// Get only the relative path (incase there are more than one file the same
+			// name)
+			String relativePath = file.toString().substring(_rootPath.length());
+			long creationTime = file.toFile().lastModified();
 			if (!this._emptyMap) {
-				// Check to see if we're comparing files
-				if (!this._compareToFiles.containsKey(fileHash)) {
+				// Check to see if we're comparing files (destination to source (update))
+				// Check to see if the directory where we're transferring to contains this files
+				// (if it does is it newer?)
+				if (!this._compareToFiles.containsKey(relativePath) || (this._compareToFiles.containsKey(relativePath)
+						&& this._compareToFiles.get(relativePath) < creationTime)) {
+					// If not, mark the item
 					this.fileCount++;
 					this._newFiles.add(file);
-					System.out.printf("Detect difference: %s\n", file.toString());
+//					System.out.printf("Detect difference: %s.\n", file.toString());
 				}
 			} else {
 				// If not, consider every file as new
 				this.fileCount++;
-				this._compareToFiles.put(fileHash, file);
+				this._compareToFiles.put(relativePath, creationTime);
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			System.err.printf("Error with visit to file %s: %s\n", file.toFile().getName(), e.toString());
 		}
+
 		return FileVisitResult.CONTINUE;
 	}
 
@@ -60,12 +70,6 @@ public class Traverser implements FileVisitor<Path> {
 	public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
 		// TODO Auto-generated method stub
 		return FileVisitResult.CONTINUE;
-	}
-
-	// Using CRC since it's faster and we don't care about security
-	private String getCRC32(Path path) throws Exception {
-		long crc = Hasher.checksumBufferedInputStream(path.toString());
-		return Long.toHexString(crc);
 	}
 
 	public int getFileCount() {
@@ -76,7 +80,7 @@ public class Traverser implements FileVisitor<Path> {
 		this.fileCount = fileCount;
 	}
 
-	public HashMap<String, Path> getHashMap() {
+	public HashMap<String, Long> getHashMap() {
 		if (this._emptyMap)
 			System.err.println("Hashmap empty");
 		return this._compareToFiles;

@@ -7,14 +7,14 @@ import java.util.HashMap;
 
 public class ItemTracker {
 	private String _src, _dest;
-	public HashMap<String, Path> _newFiles;
+	public HashMap<String, Long> _newFiles;
 	private ArrayList<Path> _filesToTransfer;
 
 	public ItemTracker(String src, String dest) {
 		this._src = src;
 		this._dest = dest;
 		println(src + "->" + dest);
-		this._newFiles = new HashMap<String, Path>();
+		this._newFiles = new HashMap<String, Long>();
 		_filesToTransfer = new ArrayList<Path>();
 	}
 
@@ -27,22 +27,22 @@ public class ItemTracker {
 
 	public boolean detectDifference() throws IOException {
 		// Traverse through and get a copy of all files' md5
-
+		System.out.println("Collecting item in source directory...");
 		// NOTE: Src contains "new" files and Dest contains "old" file
 		// so we want to check what new files Src has that Dest doesnt have
-		Traverser dest = new Traverser(null);
+		Traverser dest = new Traverser(null, this._dest);
 		Files.walkFileTree(Paths.get(this._dest), dest);
 
 		this._newFiles = dest.getHashMap();
 //		System.out.printf("HashMap size: %d\n", this._newFiles.size());
 
-		Traverser src = new Traverser(this._newFiles);
+		System.out.println("Finding changes...");
+		Traverser src = new Traverser(this._newFiles, this._src);
 		Files.walkFileTree(Paths.get(this._src), src);
 
 		this._filesToTransfer = src.getNewFiles();
 
-		System.out.printf("Destination file count: %d\t Src file count: %d\nNew file count: %d\n", dest.getFileCount(),
-				src.getFileCount(), this._filesToTransfer.size());
+		System.out.printf("Difference marked (%d files)...\n", this._filesToTransfer.size());
 
 		return !_filesToTransfer.isEmpty();
 	}
@@ -62,7 +62,7 @@ public class ItemTracker {
 	public void printNewFiles(ArrayList<Path> toPrint) {
 		int i = 0;
 		for (Path s : toPrint) {
-			println(i++ + ": " + s.toString());
+			System.out.println(i++ + ": " + s.toString());
 		}
 	}
 
