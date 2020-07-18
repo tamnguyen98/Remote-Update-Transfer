@@ -26,15 +26,17 @@ public class TransferManager {
 		ArrayList<Path> failedTransfer = new ArrayList<Path>();
 		for (Path f : files) {
 			String newLocation = getNewFilePath(f.toString());
+			System.out.printf("(%d/%d) Transfering %s to %s... ", i++, files.size(), f.getFileName(), newLocation);
 			try {
 				Path newPath = Paths.get(newLocation);
 				c2cTransfer(f, newPath); // attempt 3
 //				Files.copy(f, newPath, StandardCopyOption.REPLACE_EXISTING); // Attempt 2
 //				FileUtils.copy(f.toFile(), newPath);
-				System.out.printf("(%d/%d) Transfering %s to %s\n", i++, files.size(), f.getFileName(), newLocation);
+				System.out.printf("Complete!\n");
 			} catch (Exception e) {
-				System.err.printf("Error transferring file %s to %s\n", f.toString(), newLocation);
+				System.err.printf("Failed\n");
 				System.err.println("\tError msg: " + e.getMessage());
+				System.err.println("\t" + e.toString());
 				failedTransfer.add(f);
 			}
 		}
