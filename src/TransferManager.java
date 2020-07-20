@@ -29,10 +29,15 @@ public class TransferManager {
 			System.out.printf("(%d/%d) Transfering %s to %s... ", i++, files.size(), f.getFileName(), newLocation);
 			try {
 				Path newPath = Paths.get(newLocation);
-				c2cTransfer(f, newPath); // attempt 3
-//				Files.copy(f, newPath, StandardCopyOption.REPLACE_EXISTING); // Attempt 2
-//				FileUtils.copy(f.toFile(), newPath);
-				System.out.printf("Complete!\n");
+				if (newPath.toFile().canWrite()) {
+					c2cTransfer(f, newPath); // attempt 3
+					// Files.copy(f, newPath, StandardCopyOption.REPLACE_EXISTING); // Attempt 2
+					// FileUtils.copy(f.toFile(), newPath);
+					System.out.printf("Complete!\n");
+				} else {
+					System.err.printf("Failed!\nYou do not have permission to write to: %s\n", newLocation);
+					failedTransfer.add(f);
+				}
 			} catch (Exception e) {
 				System.err.printf("Failed\n");
 				System.err.println("\tError msg: " + e.getMessage());
@@ -53,6 +58,7 @@ public class TransferManager {
 		FileInputStream fis = new FileInputStream(source.toString());
 		FileChannel inputChannel = fis.getChannel();
 
+		System.out.print("Closing all IO readers...\t");
 		// Transfer data from input channel to output channel
 		inputChannel.transferTo(0, inputChannel.size(), targetChannel);
 
@@ -63,6 +69,7 @@ public class TransferManager {
 		// finally close the target channel
 		targetChannel.close();
 		fos.close();
+		System.out.println("Done!");
 	}
 
 	private void remoteTransfer(ArrayList<Path> files) {
