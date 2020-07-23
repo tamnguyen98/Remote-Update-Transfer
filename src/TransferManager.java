@@ -1,5 +1,6 @@
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
@@ -29,6 +30,11 @@ public class TransferManager {
 			System.out.printf("(%d/%d) Transfering %s to %s... ", i++, files.size(), f.getFileName(), newLocation);
 			try {
 				Path newPath = Paths.get(newLocation);
+				if (!newPath.toFile().exists()) {
+					newPath.toFile().getParentFile().mkdirs();
+					newPath.toFile().createNewFile();
+				}
+
 				if (newPath.toFile().canWrite()) {
 					c2cTransfer(f, newPath); // attempt 3
 					// Files.copy(f, newPath, StandardCopyOption.REPLACE_EXISTING); // Attempt 2
@@ -46,6 +52,38 @@ public class TransferManager {
 			}
 		}
 		return (failedTransfer.size() == 0) ? null : failedTransfer;
+	}
+
+	// Only Call this if the top function fails
+	public ArrayList<Path> overrideCopy(ArrayList<Path> files) {
+		int i = 1;
+		ArrayList<Path> failedTransfer = new ArrayList<Path>();
+		for (Path f : files) {
+			String newLocation = getNewFilePath(f.toString());
+			System.out.printf("(%d/%d) Transfering %s to %s... ", i++, files.size(), f.getFileName(), newLocation);
+			try {
+				Path newPath = Paths.get(newLocation);
+				generateDestination(newPath);
+
+				newPath.toFile().delete();
+				generateDestination(newPath);
+				c2cTransfer(f, newPath);
+				System.out.printf("Override Complete!\n");
+			} catch (Exception e) {
+				System.err.printf("Override Failed\n");
+				System.err.println("\tError msg: " + e.getMessage());
+				System.err.println("\t" + e.toString());
+				failedTransfer.add(f);
+			}
+		}
+		return (failedTransfer.size() == 0) ? null : failedTransfer;
+	}
+
+	public void generateDestination(Path newPath) throws IOException {
+		if (!newPath.toFile().exists()) {
+			newPath.toFile().getParentFile().mkdirs();
+			newPath.toFile().createNewFile();
+		}
 	}
 
 	// https://howtodoinjava.com/java7/nio/java-nio-2-0-how-to-transfer-copy-data-between-channels/
