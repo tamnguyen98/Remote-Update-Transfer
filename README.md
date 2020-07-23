@@ -13,9 +13,12 @@ Well, that's what this application is made for. It scans through an old copy of 
 ### Windows:
 1. Run cmd as Admin
 2. navigate to the jar file (a copy of the jar file is in the bin folder)
-3. run ```java -jar exec.jar```
+3. run ```java -jar exec.jar -y```
 4. follow the on-screen instructions
 
 ### Linux environment
 1. Open Terminal and navigate to the jar file
 2. execute the jar file with Sudo ```sudo Java -jar exec.jar```
+
+
+NOTE: Adding -y is optional. The flag just tells the program that if it fails to transfer a file (even though you have permission), delete the old file and replace it with the new one upon retry.
