@@ -71,8 +71,4 @@ public class TransferManager {
 		fos.close();
 		System.out.println("Done!");
 	}
-
-	private void remoteTransfer(ArrayList<Path> files) {
-		// TODO: make function and public
-	}
 }
