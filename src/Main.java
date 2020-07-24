@@ -31,27 +31,30 @@ public class Main {
 		try {
 			it.detectDifference();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			System.out.println(e.toString());
 		}
 
-//		it.printNewFiles();
 		if (!it.getFilesToTransfer().isEmpty()) {
 			TransferManager tm = new TransferManager(originalPath, transferToPath);
 			ArrayList<Path> failedTransfers = tm.transferFiles(it.getFilesToTransfer());
-			System.out.println("Retrying failed transfer...");
-			ArrayList<Path> retries = null;
-			if (overridePermission)
-				retries = tm.overrideCopy(failedTransfers);
-			else
-				retries = tm.transferFiles(failedTransfers);
-			if (retries != null && failedTransfers.size() == retries.size()) {
-				System.out.println("Retries failed to transfer the following files:");
-				it.printNewFiles(retries);
-				println("Program completed somewhat successfully (not really).");
-			} else
-				println("Program completed successfully.");
+
+			if (!failedTransfers.isEmpty()) {
+				System.out.println("Retrying failed transfer...");
+				ArrayList<Path> retries = null;
+
+				if (overridePermission)
+					retries = tm.overrideCopy(failedTransfers);
+				else
+					retries = tm.transferFiles(failedTransfers);
+
+				if (retries != null && failedTransfers.size() == retries.size()) {
+					System.out.println("Retries failed to transfer the following files:");
+					it.printNewFiles(retries);
+					println("Program completed somewhat successfully (not really).");
+				} else
+					println("Program completed successfully.");
+			}
 		} else {
 			System.out.println("No difference in the two directories.");
 		}
