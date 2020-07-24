@@ -1,4 +1,4 @@
-# Remote-Update-Transfer
+# Update Transfer Only
 ## Goal:
 Given the following situation: Let say you have an application that has a large directory (> 100 GB), and it receives frequent updates that are several gigabytes, but you have a data cap with your ISP (e.g., Xfinity). How do you update the applications on multiple devices WITHOUT transfer the whole directory into an external drive every time there's an update?
 
