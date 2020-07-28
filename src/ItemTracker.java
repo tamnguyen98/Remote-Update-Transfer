@@ -25,7 +25,7 @@ public class ItemTracker {
 			this._dest = dest;
 	}
 
-	public boolean detectDifference() throws IOException {
+	public boolean localDetectDifference() throws IOException {
 		// Traverse through and get a copy of all files' md5
 		System.out.println("Collecting item in source directory...");
 		// NOTE: Src contains "new" files and Dest contains "old" file
@@ -38,6 +38,18 @@ public class ItemTracker {
 
 		System.out.println("Finding changes...");
 		Traverser src = new Traverser(this._newFiles, this._src);
+		Files.walkFileTree(Paths.get(this._src), src);
+
+		this._filesToTransfer = src.getNewFiles();
+
+		System.out.printf("Difference marked (%d files)...\n", this._filesToTransfer.size());
+
+		return !_filesToTransfer.isEmpty();
+	}
+
+	public boolean remoteDetectDiffernce(HashMap<String, Long> checkWith) throws IOException {
+		System.out.println("Finding changes...");
+		Traverser src = new Traverser(checkWith, this._src);
 		Files.walkFileTree(Paths.get(this._src), src);
 
 		this._filesToTransfer = src.getNewFiles();
