@@ -1,5 +1,7 @@
 import java.net.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.io.*;
 
@@ -28,11 +30,18 @@ public class Client {
 		}
 	}
 
+	public DataOutputStream sender() {
+		return out;
+	}
+
+	public DataInputStream receiver() {
+		return input;
+	}
+
 	public void sendDirectoryInfo(String dir, HashMap<String, Long> dirContent) {
 		String data = dir + ";";
 		if (dirContent.isEmpty()) {
-			System.err.println("ITS EMPTY");
-			data = "empty map";
+			data += "E;";// E for empty
 		} else {
 			for (Map.Entry<String, Long> element : dirContent.entrySet()) {
 				String tmp = element.getKey() + ":" + element.getValue() + ";";
@@ -53,6 +62,7 @@ public class Client {
 	}
 
 	public boolean receiveAbort() throws IOException {
+		System.out.print("Verifying difference count with server... ");
 		int code = input.readInt();
 		if (code == -1)
 			return true;
@@ -60,10 +70,13 @@ public class Client {
 	}
 
 	// Check to see if there is any new files we dont have
-	public boolean recieveUpdateStatus(String toDir) {
+	public ArrayList<String> recieveUpdateStatus(String toDir) {
+		ArrayList<String> incomingFiles = new ArrayList<String>();
 		try {
 
 			String newFilesCollections = "";
+			// Only reason I'm using a buffer instead of readUTF is encase there is a large
+			// quantity of files difference
 			byte[] buf = new byte[4092];
 			input.read(buf, 0, 4092);
 			String bToS = new String(buf);
@@ -72,32 +85,75 @@ public class Client {
 				input.read(buf, 0, 4092);
 				bToS = new String(buf);
 			}
-			newFilesCollections += bToS.substring(0, bToS.indexOf(";OK") + 3);
+			newFilesCollections += bToS.substring(bToS.indexOf(':') + 1, bToS.indexOf(";OK") + 3); // We want to include
+																									// OK to know when
+																									// to stop
 
-			System.out.println("From server: " + newFilesCollections);
-			System.out.println("Initializing a temp file to " + toDir);
+			System.out.println("Initializing a temp file of all files to be downloaded to " + toDir + "\\.incoming");
 			FileOutputStream tmpListFile = new FileOutputStream(toDir + "\\.incoming");
 			int filesCount = 0;
-			boolean recievedOK = false;
 			for (String s : newFilesCollections.split(";")) {
 				if (!s.equals("OK")) {
 					filesCount++;
+					incomingFiles.add(s);
 					tmpListFile.write((s + "\n").getBytes());
-				} else {
-					recievedOK = true;
 				}
 			}
 
 			tmpListFile.close();
 			out.writeInt(filesCount); // let the server know how much new files (names) it got
 			out.flush();
-			if (recievedOK || filesCount > 0)
-				return true;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
+			System.err.println(e.toString());
 			e.printStackTrace();
 		}
-		return false;
+		return incomingFiles;
+	}
+
+	public void startDownload(String toDestination, ArrayList<String> files) {
+		try {
+			out.writeUTF("S"); // Send a ready signal
+			out.flush();
+			Iterator<String> listIterator = files.iterator();
+			byte[] buf = new byte[4092]; // buffer read from socket
+			int n = 0; // how much we've read
+			while (listIterator.hasNext()) {
+				String fileName = listIterator.next();
+				System.out.printf("Downloading %s ", fileName);
+				long fileSize = input.readLong();
+				System.out.print("with byte size " + fileSize + "... ");
+				try {
+					fileName = toDestination + "\\" + fileName;
+					String tmpName = fileName + ".tmp";
+					FileOutputStream fos = new FileOutputStream(tmpName);
+					while (fileSize > 0 && (n = input.read(buf, 0, (int) Math.min(buf.length, fileSize))) != -1) {
+						fos.write(buf, 0, n);
+						fileSize -= n;
+					}
+					fos.close();
+
+					File newFile = new File(tmpName);
+					File destinationFile = new File(fileName);
+					boolean renameStatus = newFile.renameTo(destinationFile);// rename the file without the tmp
+					if (renameStatus == false) { // Fail to rename file
+						if (destinationFile.exists() && newFile.exists()) {
+							destinationFile.delete();
+							newFile.renameTo(destinationFile);
+						}
+					}
+					System.out.println("Done!");
+				} catch (IOException e) {
+					System.err.printf("Error downloading %s: %s\n", fileName, e.toString());
+					File destinationFile = new File(fileName);
+					if (destinationFile.exists())
+						destinationFile.delete();
+				}
+			}
+			System.out.println("All Download Complete");
+		} catch (IOException e) {
+			System.err.println(e.toString());
+		}
 	}
 
 	public void closeSocket() {

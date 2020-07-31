@@ -4,6 +4,7 @@ import java.net.*;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.io.*;
 
 public class Server {
@@ -37,7 +38,7 @@ public class Server {
 		try {
 			HashMap<String, Long> clientDir = new HashMap<String, Long>();
 			String data = input.readUTF();
-			if (!data.equals("empty map")) {
+			if (!data.contains(";E;")) {
 				System.out.println(data.replace(";", "\n"));
 				int i = 0;
 				for (String s : data.split(";")) {
@@ -50,9 +51,10 @@ public class Server {
 					}
 				}
 			}
+
 			out.write("OK".getBytes());
-			System.out.println("Sent OK");
 			out.flush();
+			System.out.println("Client would like to recieve files for " + data.substring(0, data.indexOf(";E")));
 			return clientDir;
 
 		} catch (IOException e) {
@@ -61,14 +63,13 @@ public class Server {
 		return null;
 	}
 
-	public void sendAvailableFilesToTransfer(ArrayList<Path> files) {
+	public int sendAvailableFileNamesToTransfer(ArrayList<Path> files) {
 		// Grab all the files we (the server) have that the client doesn't
 		// and convert it to a string with ';' as delimiter
-		String fileNamesCollections = "";
+		String fileNamesCollections = ":"; // Encase the client gets random characters
 		int count = 0;
 		for (Path f : files) {
 			count++;
-			System.out.println(f.getFileName());
 			fileNamesCollections += f.getFileName() + ";";
 		}
 		// Add ok to let the client know that's all of the file difference (really not
@@ -79,30 +80,68 @@ public class Server {
 		try {
 			out.writeUTF(fileNamesCollections);
 			out.flush();
-			System.out.println("Sent to client: " + fileNamesCollections);
 			confirmedFileCount = input.readInt();
-			System.out.println("Recieve from Client: " + confirmedFileCount);
+			System.out.println("\rREADY\nVerifying with client... " + confirmedFileCount);
 			if (confirmedFileCount != count) {
 				System.err.printf("UH OH, Client only thinks we're transfering %d when it's actually %d\n",
 						confirmedFileCount, count);
 				System.out.printf("Error occured before files transfer, telling client to abort\n");
 				out.writeInt(-1);
 				out.flush();
+				return -1;
+			} else {
+				System.out.println("Client's value matches. Clear to proceed.");
+				out.writeInt(confirmedFileCount);
+				out.flush();
+				return 0;
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			System.err.println(e.toString());
 		}
+		return 1;
 	}
 
-	public void sendStringToClient(String data) {
-		if (data == null || data.isEmpty())
-			return;
+	public void startUploading(ArrayList<Path> files) {
 		try {
-			out.write(data.getBytes());
+			if (input.readUTF().equals("S")) { // Wait until client gets ready
+				System.out.println("Client's ready, starting transfer...");
+				Iterator<Path> listIterator = files.iterator();
+				byte[] buf = new byte[4092]; // buffer read from socket
+				int n = 0; // how much we've read
+
+				while (listIterator.hasNext()) {
+					String fName = listIterator.next().toString();
+					System.out.print("Uploading " + fName);
+					File f = new File(fName);
+					out.writeLong(f.length()); // send the filesize first
+					out.flush();
+					System.out.print(" with byte size of " + f.length() + "... ");
+					FileInputStream fis = new FileInputStream(f);
+					while ((n = fis.read(buf)) != -1) {
+						out.write(buf, 0, n);
+						out.flush();
+
+					}
+					System.out.println("DONE");
+					fis.close();
+				}
+			}
 		} catch (IOException e) {
 			System.err.println(e.toString());
 		}
+	}
+
+	public boolean expectFromClient(int value) {
+		try {
+			int recieve = input.readInt();
+			if (recieve == value)
+				return true;
+		} catch (IOException e) {
+			System.err.println(e.toString());
+		}
+		return false;
+
 	}
 
 	public void closeSocket() {

@@ -82,7 +82,7 @@ public class Traverser implements FileVisitor<Path> {
 
 	public HashMap<String, Long> getHashMap() {
 		if (this._emptyMap)
-			System.err.println("Hashmap empty");
+			System.err.println("Directory is empty...");
 		return this._compareToFiles;
 	}
 

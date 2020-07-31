@@ -1,4 +1,4 @@
-import java.io.File;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
+import org.apache.commons.io.FilenameUtils;
 
 /**
  * @author Offline
@@ -42,72 +43,115 @@ public class Main {
 
 		switch (option) {
 		case 1: // Receiving
-			System.out.println("Enter the <IP:Port> of the server you're receiving the updates from: ");
-			input.nextLine(); // to start capturing input
-//			String[] addy = input.nextLine().replaceAll("[<>]*", "").split(":"); // Remove <> brackets encase the user
-			// provides them and split it
-//			Client serverConnection = new Client(addy[0], Integer.parseInt(addy[1]));
-			Client serverConnection = new Client("localhost", 5123); // for testing
-			System.out.print("Enter the directory where you want the updates to be downloaded to: ");
-//			String workingDir = input.nextLine();
-			String workingDir = "F:\\GitHub\\Remote-Update-Transfer\\bin"; // for testing
-
-			// Traverse through the directory and collect all the
-			// files' name and last modified date
-			Traverser dest = new Traverser(null, workingDir);
-			try {
-				System.out.println("Collecting item in source directory...");
-				Files.walkFileTree(Paths.get(workingDir), dest);
-			} catch (IOException e) {
-				System.err.println(e.toString());
-			}
-
-			// Get the collection as a HashMap since it was working with HM
-			HashMap<String, Long> dirContent = dest.getHashMap();
-			serverConnection.sendDirectoryInfo(workingDir, dirContent); // send it
-
-			// Check if there are any new files from the server;
-			boolean hasUpdate = serverConnection.recieveUpdateStatus(workingDir);
-			// Confirm whether we have the right file count
-			try {
-				if (serverConnection.receiveAbort()) {
-					System.out.println("Recieve abort from server (possible do to missing files)");
-				} else {
-					System.out.println("Recieve OK from server to start file transfer!");
-				}
-			} catch (IOException e) {
-				System.err.println(e.toString());
-			}
-			serverConnection.closeSocket();
+			actAsClient(option);
 			break;
 		case 2: // sending
-			System.out.print("Enter a open port to work on: ");
-			Server clientConnection = new Server(5123);
-
-			// Get a copy of the client's directory to compare to ours
-			HashMap<String, Long> clientDirInfo = clientConnection.recieveClientDirectoryContent();
-			// Take in the directory we want to compare with
-			String src = input.nextLine();
-			ItemTracker it = new ItemTracker(src, null);
-			try {
-				// Time to compare the two directory content
-				boolean hasItemToTransfer = it.remoteDetectDiffernce(clientDirInfo);
-				System.out.printf("We %s have stuff to give\n", hasItemToTransfer ? "do" : "don't");
-				if (hasItemToTransfer) {
-					clientConnection.sendAvailableFilesToTransfer(it.getFilesToTransfer());
-				} else {
-					System.out.println("Client has latest files.");
-				}
-			} catch (IOException e) {
-				System.err.println(e.toString());
-			}
-			clientConnection.closeSocket();
+			actAsServer();
 			break;
 		default:
 			System.err.println("Input not recognized!");
 			remoteTransfer(args);
 			return;
 		}
+	}
+
+	private static void actAsClient(int option) {
+		System.out.println("Enter the <IP:Port> of the server you're receiving the updates from: ");
+		input.nextLine(); // to start capturing input
+		String[] addy = input.nextLine().replaceAll("[<>]*", "").split(":"); // Remove <> brackets encase the user
+		// provides them and split it
+		Client serverConnection = new Client(addy[0], Integer.parseInt(addy[1]));
+//		Client serverConnection = new Client("localhost", 5123); // for testing
+		DataOutputStream cOut = serverConnection.sender(); // connection output
+
+		System.out.print("Enter the directory where you want the updates to be downloaded to: ");
+		String workingDir = FilenameUtils.normalize(input.nextLine());
+//		String workingDir = "F:\\GitHub\\Remote-Update-Transfer\\test"; // for testing
+
+		// Traverse through the directory and collect all the
+		// files' name and last modified date
+		Traverser dest = new Traverser(null, workingDir);
+		try {
+			System.out.println("Collecting item in source directory...");
+			Files.walkFileTree(Paths.get(workingDir), dest);
+		} catch (IOException e) {
+			System.err.println(e.toString());
+		}
+
+		// Get the collection as a HashMap since it was working with HM
+		HashMap<String, Long> dirContent = dest.getHashMap();
+		serverConnection.sendDirectoryInfo(workingDir, dirContent); // send it
+
+		// Check if there are any new files from the server;
+		ArrayList<String> incomingFiles = serverConnection.recieveUpdateStatus(workingDir);
+		// Confirm whether we have the right file count
+		try {
+			if (serverConnection.receiveAbort()) {
+				// Fail in communication
+				System.out.print(
+						"Recieve abort from server (possible due to missing files).\nWould you like to retry (1) or no(0)? ");
+				option = input.nextInt();
+				input.nextLine(); // To clear the input
+				if (option == 1) { // Check to see if user want to retry
+					try {
+						cOut.writeInt(option);
+						cOut.flush();
+						if (!serverConnection.receiveAbort()) // If we got the OK from server
+							serverConnection.startDownload(workingDir, incomingFiles);
+						else
+							System.out.println("Retry failed again. Closing connection...");
+					} catch (IOException e) {
+						System.err.println("Error retrying to recieve update status: " + e.toString());
+					}
+				}
+
+			} else {
+				System.out.println("Recieve OK from server to start file transfer!");
+				serverConnection.startDownload(workingDir, incomingFiles);
+			}
+		} catch (IOException e) {
+			System.err.println("Huh?:" + e.toString());
+		}
+		serverConnection.closeSocket();
+	}
+
+	private static void actAsServer() {
+		System.out.print("Enter a open port to work on (enter 0 for default): ");
+		int port = input.nextInt();
+		input.nextLine(); // clear the input
+		Server clientConnection = new Server((port == 0) ? 5123 : port);
+
+		// Get a copy of the client's directory to compare to ours
+		HashMap<String, Long> clientDirInfo = clientConnection.recieveClientDirectoryContent();
+		// Take in the directory we want to compare with
+		System.out.println("Enter the path of the directory you want to compare with"
+				+ " (directory that contains the update the client is looking for).");
+		String src = FilenameUtils.normalize(input.nextLine());
+		ItemTracker it = new ItemTracker(src, null);
+		try {
+			// Time to compare the two directory content
+			System.out.println("Checking directory for update.");
+			boolean hasItemToTransfer = it.remoteDetectDiffernce(clientDirInfo);
+			System.out.printf("%s", hasItemToTransfer ? "Preparing files to upload..." : "Nothing to give!");
+			if (hasItemToTransfer) {
+				int verifiedStatus = clientConnection.sendAvailableFileNamesToTransfer(it.getFilesToTransfer());
+				if (verifiedStatus == 0)
+					clientConnection.startUploading(it.getFilesToTransfer());
+				else if (verifiedStatus == -1) {
+					/// If client data test sent failed
+					System.out.println("Trying again... ");
+					verifiedStatus = clientConnection.sendAvailableFileNamesToTransfer(it.getFilesToTransfer());
+					if (verifiedStatus == 1)
+						clientConnection.startUploading(it.getFilesToTransfer());
+				}
+				clientConnection.closeSocket();
+			} else {
+				System.out.println("Client has latest files.");
+			}
+		} catch (IOException e) {
+			System.err.println(e.toString());
+		}
+		clientConnection.closeSocket();
 	}
 
 	private static void localTransfer(String[] args) {
