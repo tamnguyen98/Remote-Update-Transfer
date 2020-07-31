@@ -5,6 +5,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+
+import org.apache.commons.io.FilenameUtils;
+
 import java.io.*;
 
 public class Server {
@@ -62,21 +65,22 @@ public class Server {
 		return null;
 	}
 
-	public int sendAvailableFileNamesToTransfer(ArrayList<Path> files) {
+	public int sendAvailableFileNamesToTransfer(String dir, ArrayList<Path> files) {
 		// Grab all the files we (the server) have that the client doesn't
 		// and convert it to a string with ';' as delimiter
 		String fileNamesCollections = ":"; // Encase the client gets random characters
 		int count = 0;
 		for (Path f : files) {
 			count++;
-			fileNamesCollections += f.getFileName() + ";";
+			fileNamesCollections += FilenameUtils.normalize(f.toString().substring(dir.length() + 1)) + ";";
 		}
 		// Add ok to let the client know that's all of the file difference (really not
 		// needed)
-		fileNamesCollections += "OK";
 
 		int confirmedFileCount;
 		try {
+			out.writeInt(fileNamesCollections.length());
+			out.flush();
 			out.writeUTF(fileNamesCollections);
 			out.flush();
 			confirmedFileCount = input.readInt();

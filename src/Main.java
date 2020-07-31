@@ -142,13 +142,13 @@ public class Main {
 			boolean hasItemToTransfer = it.remoteDetectDiffernce(clientDirInfo);
 			System.out.printf("%s", hasItemToTransfer ? "Preparing files to upload..." : "Nothing to give!");
 			if (hasItemToTransfer) {
-				int verifiedStatus = clientConnection.sendAvailableFileNamesToTransfer(it.getFilesToTransfer());
+				int verifiedStatus = clientConnection.sendAvailableFileNamesToTransfer(src, it.getFilesToTransfer());
 				if (verifiedStatus == 0)
 					clientConnection.startUploading(it.getFilesToTransfer());
 				else if (verifiedStatus == -1) {
 					/// If client data test sent failed
 					System.out.println("Trying again... ");
-					verifiedStatus = clientConnection.sendAvailableFileNamesToTransfer(it.getFilesToTransfer());
+					verifiedStatus = clientConnection.sendAvailableFileNamesToTransfer(src, it.getFilesToTransfer());
 					if (verifiedStatus == 1)
 						clientConnection.startUploading(it.getFilesToTransfer());
 				}

@@ -1,8 +1,12 @@
 import java.net.*;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import org.apache.commons.io.FilenameUtils;
+
 import java.io.*;
 
 // Client wants to get updated files from the server
@@ -78,28 +82,25 @@ public class Client {
 			// Only reason I'm using a buffer instead of readUTF is encase there is a large
 			// quantity of files difference
 			byte[] buf = new byte[4092];
-			input.read(buf, 0, 4092);
-			String bToS = new String(buf);
-			while (!bToS.contains(";OK")) {
-				newFilesCollections += bToS;
-				input.read(buf, 0, 4092);
-				bToS = new String(buf);
+			String bToString = "";
+			int size = input.readInt();
+			int n = 0; // read count
+			while (size > 0 && (n = input.read(buf, 0, Math.min(buf.length, size))) != -1) {
+				size -= n;
+				bToString += new String(buf, 0, n);
 			}
-			newFilesCollections += bToS.substring(bToS.indexOf(':') + 1, bToS.indexOf(";OK") + 3); // We want to include
-																									// OK to know when
-																									// to stop
+			newFilesCollections += bToString.substring(bToString.indexOf(':') + 1);
 
 			System.out.println("Initializing a temp file of all files to be downloaded to " + toDir + "\\.incoming");
 			FileOutputStream tmpListFile = new FileOutputStream(toDir + "\\.incoming");
 			int filesCount = 0;
 			for (String s : newFilesCollections.split(";")) {
-				if (!s.equals("OK")) {
-					filesCount++;
-					incomingFiles.add(s);
-					tmpListFile.write((s + "\n").getBytes());
-				}
+				filesCount++;
+				incomingFiles.add(s);
+				tmpListFile.write((s + "\n").getBytes());
 			}
-
+			System.out.printf("There is %d files to be transfered. Check the .incoming file for the list\n",
+					filesCount);
 			tmpListFile.close();
 			out.writeInt(filesCount); // let the server know how much new files (names) it got
 			out.flush();
@@ -124,7 +125,7 @@ public class Client {
 				long fileSize = input.readLong();
 				System.out.print("with byte size " + fileSize + "... ");
 				try {
-					fileName = toDestination + "\\" + fileName;
+					fileName = FilenameUtils.normalize(toDestination + "\\" + fileName);
 					String tmpName = fileName + ".tmp";
 					File newFile = new File(tmpName);
 					if (!newFile.exists()) {
