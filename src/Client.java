@@ -126,6 +126,11 @@ public class Client {
 				try {
 					fileName = toDestination + "\\" + fileName;
 					String tmpName = fileName + ".tmp";
+					File newFile = new File(tmpName);
+					if (!newFile.exists()) {
+						newFile.getParentFile().mkdirs();
+					}
+
 					FileOutputStream fos = new FileOutputStream(tmpName);
 					while (fileSize > 0 && (n = input.read(buf, 0, (int) Math.min(buf.length, fileSize))) != -1) {
 						fos.write(buf, 0, n);
@@ -133,7 +138,6 @@ public class Client {
 					}
 					fos.close();
 
-					File newFile = new File(tmpName);
 					File destinationFile = new File(fileName);
 					boolean renameStatus = newFile.renameTo(destinationFile);// rename the file without the tmp
 					if (renameStatus == false) { // Fail to rename file

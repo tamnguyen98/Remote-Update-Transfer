@@ -39,11 +39,10 @@ public class Server {
 			HashMap<String, Long> clientDir = new HashMap<String, Long>();
 			String data = input.readUTF();
 			if (!data.contains(";E;")) {
-				System.out.println(data.replace(";", "\n"));
+//				System.out.println(data.replace(";", "\n"));
 				int i = 0;
 				for (String s : data.split(";")) {
 					if (i == 0) {
-						System.out.println("Client wants to recieve update for " + s);
 						i++;
 					} else {
 						String[] kv = s.split(":"); // Split for key-value
@@ -54,7 +53,7 @@ public class Server {
 
 			out.write("OK".getBytes());
 			out.flush();
-			System.out.println("Client would like to recieve files for " + data.substring(0, data.indexOf(";E")));
+			System.out.println("Client would like to recieve files for " + data.substring(0, data.indexOf(";")));
 			return clientDir;
 
 		} catch (IOException e) {

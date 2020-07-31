@@ -1,4 +1,5 @@
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,6 +23,7 @@ public class Main {
 		// TODO Auto-generated method stub
 		System.out.print("Local transfer (1) or Remote Transfer (2)?: ");
 		int option = input.nextInt();
+		input.nextLine();
 
 		switch (option) {
 		case 1:
@@ -67,7 +69,13 @@ public class Main {
 		System.out.print("Enter the directory where you want the updates to be downloaded to: ");
 		String workingDir = FilenameUtils.normalize(input.nextLine());
 //		String workingDir = "F:\\GitHub\\Remote-Update-Transfer\\test"; // for testing
-
+		File dir = new File(workingDir);
+		while (!dir.canWrite()) {
+			System.out.print("Sorry, you don't have write permission to this directory. "
+					+ "\nEither enter a new directory or gain write access to this directory: ");
+			workingDir = FilenameUtils.normalize(input.nextLine());
+			dir = new File(workingDir);
+		}
 		// Traverse through the directory and collect all the
 		// files' name and last modified date
 		Traverser dest = new Traverser(null, workingDir);
