@@ -1,4 +1,6 @@
 import java.net.*;
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,7 +26,7 @@ public class Client {
 		// establish a connection
 		try {
 			socket = new Socket(address, port);
-			System.out.println("Connected");
+			System.out.printf("%sConnected%s\n", GlobalTools.ANSI_GREEN, GlobalTools.ANSI_RESET);
 			input = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 			out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 
@@ -60,7 +62,8 @@ public class Client {
 			out.flush();
 			byte[] buf = new byte[3]; // should be enough to receive OK
 			input.read(buf);
-			System.out.println("Server response to directory info: " + new String(buf));
+			System.out.printf("Server response to directory info: %s%s%s\n", GlobalTools.ANSI_GREEN, new String(buf),
+					GlobalTools.ANSI_RESET);
 		} catch (IOException e) {
 			System.err.println(e.toString());
 		}
@@ -92,7 +95,8 @@ public class Client {
 			}
 			newFilesCollections += bToString.substring(bToString.indexOf(':') + 1);
 
-			System.out.println("Initializing a temp file of all files to be downloaded to " + toDir + "\\.newfiles");
+			System.out.println("Initializing a temp file of all files to be downloaded to " + GlobalTools.ANSI_CYAN
+					+ toDir + "\\.newfiles" + GlobalTools.ANSI_RESET);
 			FileOutputStream tmpListFile = new FileOutputStream(toDir + "\\.newfiles");
 			int filesCount = 0;
 			for (String s : newFilesCollections.split(";")) {
@@ -100,8 +104,8 @@ public class Client {
 				incomingFiles.add(s);
 				tmpListFile.write((s + "\n").getBytes());
 			}
-			System.out.printf("There is %d files to be transfered. Check the .incoming file for the list\n",
-					filesCount);
+			System.out.printf("There is %d files to be transfered. Check the %s.incoming%s file for the list\n",
+					filesCount, GlobalTools.ANSI_CYAN, GlobalTools.ANSI_RESET);
 			tmpListFile.close();
 			out.writeInt(filesCount); // let the server know how much new files (names) it got
 			out.flush();
@@ -122,11 +126,11 @@ public class Client {
 			int n = 0; // how much we've read
 			while (listIterator.hasNext()) {
 				String fileName = listIterator.next();
-				System.out.printf("Downloading %s ", fileName);
 				long fileSize = input.readLong();
 				out.writeInt(1);
 				out.flush();
-				System.out.print("with byte size " + fileSize + "... ");
+				System.out.printf("Downloading %s(%s)%s %s ", GlobalTools.ANSI_BLUE,
+						GlobalTools.byteConversionSI(fileSize), GlobalTools.ANSI_RESET, fileName);
 				try {
 					fileName = FilenameUtils.normalize(toDestination + "\\" + fileName);
 					String tmpName = fileName + ".tmp";
@@ -150,15 +154,16 @@ public class Client {
 							newFile.renameTo(destinationFile);
 						}
 					}
-					System.out.println("Done!");
+					System.out.println(GlobalTools.ANSI_GREEN + "Done!" + GlobalTools.ANSI_RESET);
 				} catch (IOException e) {
-					System.err.printf("Error downloading %s: %s\n", fileName, e.toString());
+					System.err.printf("%sError downloading %s: %s%s\n", GlobalTools.ANSI_RED, fileName, e.toString(),
+							GlobalTools.ANSI_RESET);
 					File destinationFile = new File(fileName);
 					if (destinationFile.exists())
 						destinationFile.delete();
 				}
 			}
-			System.out.println("All Download Complete");
+			System.out.printf("%sAll Download Complete%s\n", GlobalTools.ANSI_GREEN, GlobalTools.ANSI_RESET);
 		} catch (IOException e) {
 			System.err.println(e.toString());
 		}

@@ -60,18 +60,19 @@ public class Main {
 	private static void actAsClient(int option) {
 		System.out.println("Enter the <IP:Port> of the server you're receiving the updates from: ");
 		input.nextLine(); // to start capturing input
-//		String[] addy = input.nextLine().replaceAll("[<>]*", "").split(":"); // Remove <> brackets encase the user
+		String[] addy = input.nextLine().replaceAll("[<>]*", "").split(":"); // Remove <> brackets encase the user
 		// provides them and split it
-//		Client serverConnection = new Client(addy[0], Integer.parseInt(addy[1]));
-		Client serverConnection = new Client("localhost", 5123); // for testing
+		Client serverConnection = new Client(addy[0], Integer.parseInt(addy[1]));
+//		Client serverConnection = new Client("localhost", 5123); // for testing
 		DataOutputStream cOut = serverConnection.sender(); // connection output
 
 		System.out.print("Enter the directory where you want the updates to be downloaded to: ");
-//		String workingDir = FilenameUtils.normalize(input.nextLine());
-		String workingDir = "F:\\GitHub\\Remote-Update-Transfer\\bin\\tmp"; // for testing
+		String workingDir = FilenameUtils.normalize(input.nextLine());
+//		String workingDir = "F:\\GitHub\\Remote-Update-Transfer\\bin\\tmp"; // for testing
 		File dir = new File(workingDir);
 		while (!dir.canWrite()) {
-			System.out.print("Sorry, you don't have write permission to this directory. "
+			System.out.print(GlobalTools.ANSI_RED + "Sorry, you don't have write permission to this directory. "
+					+ GlobalTools.ANSI_RESET
 					+ "\nEither enter a new directory or gain write access to this directory: ");
 			workingDir = FilenameUtils.normalize(input.nextLine());
 			dir = new File(workingDir);
@@ -96,8 +97,9 @@ public class Main {
 		try {
 			if (serverConnection.receiveAbort()) {
 				// Fail in communication
-				System.out.print(
-						"Recieve abort from server (possible due to missing files).\nWould you like to retry (1) or no(0)? ");
+				System.out.printf(
+						"%sRecieve abort from server (possible due to missing files).%s\nWould you like to retry (1) or no(0)? ",
+						GlobalTools.ANSI_RED, GlobalTools.ANSI_RESET);
 				option = input.nextInt();
 				input.nextLine(); // To clear the input
 				if (option == 1) { // Check to see if user want to retry
@@ -107,14 +109,14 @@ public class Main {
 						if (!serverConnection.receiveAbort()) // If we got the OK from server
 							serverConnection.startDownload(workingDir, incomingFiles);
 						else
-							System.out.println("Retry failed again. Closing connection...");
+							System.out.printf("%sRetry failed again. Closing connection...%s\n", GlobalTools.ANSI_RED, GlobalTools.ANSI_RESET);
 					} catch (IOException e) {
-						System.err.println("Error retrying to recieve update status: " + e.toString());
+						System.err.printf("Error retrying to recieve update status: %s%s\n", GlobalTools.ANSI_RED, e.toString(), GlobalTools.ANSI_RESET);
 					}
 				}
 
 			} else {
-				System.out.println("Recieve OK from server to start file transfer!");
+				System.out.printf("%sRecieve OK from server to start file transfer!%s\n", GlobalTools.ANSI_GREEN, GlobalTools.ANSI_RESET);
 				serverConnection.startDownload(workingDir, incomingFiles);
 			}
 		} catch (IOException e) {
@@ -125,9 +127,9 @@ public class Main {
 
 	private static void actAsServer() {
 		System.out.print("Enter a open port to work on (enter 0 for default): ");
-//		int port = input.nextInt();
-//		input.nextLine(); // clear the input
-		int port = 5123; // Debug
+		int port = input.nextInt();
+		input.nextLine(); // clear the input
+//		int port = 5123; // Debug
 		Server clientConnection = new Server((port == 0) ? 5123 : port);
 
 		// Get a copy of the client's directory to compare to ours
@@ -135,9 +137,8 @@ public class Main {
 		// Take in the directory we want to compare with
 		System.out.println("Enter the path of the directory you want to compare with"
 				+ " (directory that contains the update the client is looking for).");
-//		String src = FilenameUtils.normalize(input.nextLine());
-		String src = FilenameUtils.normalize(
-				"F:\\Learning Videos\\ASPNET\\Building a RESTful API with ASP.NET Core 3\\03. Structuring and Implementing the Outer Facing Contract"); // Debug
+		String src = FilenameUtils.normalize(input.nextLine());
+//		String src = FilenameUtils.normalize("F:\\Learning Videos\\ASPNET\\Building a RESTful API with ASP.NET Core 3\\03. Structuring and Implementing the Outer Facing Contract"); // Debug
 		ItemTracker it = new ItemTracker(src, null);
 		try {
 			// Time to compare the two directory content

@@ -28,7 +28,7 @@ public class Server {
 			System.out.println("Waiting for a client ...");
 
 			socket = server.accept();
-			System.out.println("Client accepted");
+			System.out.printf("%sClient accepted%s\n", GlobalTools.ANSI_GREEN, GlobalTools.ANSI_RESET);
 			input = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 			out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 
@@ -56,7 +56,8 @@ public class Server {
 
 			out.write("OK".getBytes());
 			out.flush();
-			System.out.println("Client would like to recieve files for " + data.substring(0, data.indexOf(";")));
+			System.out.printf("Client would like to recieve files for %s%s%s\n", GlobalTools.ANSI_CYAN,
+					data.substring(0, data.indexOf(";")), GlobalTools.ANSI_RESET);
 			return clientDir;
 
 		} catch (IOException e) {
@@ -83,16 +84,19 @@ public class Server {
 			out.writeUTF(fileNamesCollections);
 			out.flush();
 			confirmedFileCount = input.readInt();
-			System.out.printf("READY\nVerifying with client... " + confirmedFileCount);
+			System.out.printf("%sREADY%s\nVerifying with client... Recieved (%s)\n", GlobalTools.ANSI_GREEN,
+					GlobalTools.ANSI_RESET, confirmedFileCount);
 			if (confirmedFileCount != count) {
-				System.err.printf("UH OH, Client only thinks we're transfering %d when it's actually %d\n",
-						confirmedFileCount, count);
-				System.out.printf("Error occured before files transfer, telling client to abort\n");
+				System.err.printf("%sUH OH, Client only thinks we're transfering %d when it's actually %d\n",
+						GlobalTools.ANSI_RED, confirmedFileCount, count);
+				System.out.printf("Error occured before files transfer, telling client to abort%s\n",
+						GlobalTools.ANSI_RESET);
 				out.writeInt(-1);
 				out.flush();
 				return -1;
 			} else {
-				System.out.println("Client's value matches. Clear to proceed.");
+				System.out.printf("Client's value matches. %sClear to proceed.%s\n", GlobalTools.ANSI_GREEN,
+						GlobalTools.ANSI_RESET);
 				out.writeInt(confirmedFileCount);
 				out.flush();
 				return 0;
@@ -114,13 +118,13 @@ public class Server {
 
 				while (listIterator.hasNext()) {
 					String fName = listIterator.next().toString();
-					System.out.print("Uploading " + fName);
+					System.out.printf("Uploading %s%s%s", GlobalTools.ANSI_CYAN, fName, GlobalTools.ANSI_RESET);
 					File f = new File(fName);
 					long fsize = f.length();
 					out.writeLong(fsize);
 					out.flush();
 					input.readInt();
-					System.out.print(" with byte size of " + fsize + "... ");
+					System.out.printf(" with size of %s...", GlobalTools.byteConversionSI(fsize));
 					FileInputStream fis = new FileInputStream(f);
 					while ((n = fis.read(buf)) != -1) {
 						out.write(buf, 0, n);
@@ -128,7 +132,7 @@ public class Server {
 
 					}
 
-					System.out.println("DONE");
+					System.out.println(GlobalTools.ANSI_GREEN + "DONE" + GlobalTools.ANSI_RESET);
 					fis.close();
 				}
 			}

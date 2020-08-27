@@ -60,7 +60,9 @@ public class TransferManager {
 		ArrayList<Path> failedTransfer = new ArrayList<Path>();
 		for (Path f : files) {
 			String newLocation = getNewFilePath(f.toString());
-			System.out.printf("(%d/%d) Transfering %s to %s... ", i++, files.size(), f.getFileName(), newLocation);
+			System.out.printf("(%d/%d) Transfering (%s) %s to %s%s%s... ", i++, files.size(),
+					GlobalTools.byteConversionSI(f.toFile().length()), f.getFileName(), 
+					GlobalTools.ANSI_CYAN, newLocation, GlobalTools.ANSI_RESET);
 			try {
 				Path newPath = Paths.get(newLocation);
 				generateDestination(newPath);
