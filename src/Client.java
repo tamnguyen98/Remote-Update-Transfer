@@ -1,9 +1,10 @@
 import java.net.*;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.FilenameUtils;
 
@@ -85,14 +86,14 @@ public class Client {
 			String bToString = "";
 			int size = input.readInt();
 			int n = 0; // read count
-			while (size > 0 && (n = input.read(buf, 0, Math.min(buf.length, size))) != -1) {
+			while (size > 0 && (n = input.read(buf, 0, Math.min(buf.length, size))) > -1) {
 				size -= n;
 				bToString += new String(buf, 0, n);
 			}
 			newFilesCollections += bToString.substring(bToString.indexOf(':') + 1);
 
-			System.out.println("Initializing a temp file of all files to be downloaded to " + toDir + "\\.incoming");
-			FileOutputStream tmpListFile = new FileOutputStream(toDir + "\\.incoming");
+			System.out.println("Initializing a temp file of all files to be downloaded to " + toDir + "\\.newfiles");
+			FileOutputStream tmpListFile = new FileOutputStream(toDir + "\\.newfiles");
 			int filesCount = 0;
 			for (String s : newFilesCollections.split(";")) {
 				filesCount++;
@@ -123,6 +124,8 @@ public class Client {
 				String fileName = listIterator.next();
 				System.out.printf("Downloading %s ", fileName);
 				long fileSize = input.readLong();
+				out.writeInt(1);
+				out.flush();
 				System.out.print("with byte size " + fileSize + "... ");
 				try {
 					fileName = FilenameUtils.normalize(toDestination + "\\" + fileName);

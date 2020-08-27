@@ -60,15 +60,15 @@ public class Main {
 	private static void actAsClient(int option) {
 		System.out.println("Enter the <IP:Port> of the server you're receiving the updates from: ");
 		input.nextLine(); // to start capturing input
-		String[] addy = input.nextLine().replaceAll("[<>]*", "").split(":"); // Remove <> brackets encase the user
+//		String[] addy = input.nextLine().replaceAll("[<>]*", "").split(":"); // Remove <> brackets encase the user
 		// provides them and split it
-		Client serverConnection = new Client(addy[0], Integer.parseInt(addy[1]));
-//		Client serverConnection = new Client("localhost", 5123); // for testing
+//		Client serverConnection = new Client(addy[0], Integer.parseInt(addy[1]));
+		Client serverConnection = new Client("localhost", 5123); // for testing
 		DataOutputStream cOut = serverConnection.sender(); // connection output
 
 		System.out.print("Enter the directory where you want the updates to be downloaded to: ");
-		String workingDir = FilenameUtils.normalize(input.nextLine());
-//		String workingDir = "F:\\GitHub\\Remote-Update-Transfer\\test"; // for testing
+//		String workingDir = FilenameUtils.normalize(input.nextLine());
+		String workingDir = "F:\\GitHub\\Remote-Update-Transfer\\bin\\tmp"; // for testing
 		File dir = new File(workingDir);
 		while (!dir.canWrite()) {
 			System.out.print("Sorry, you don't have write permission to this directory. "
@@ -125,8 +125,9 @@ public class Main {
 
 	private static void actAsServer() {
 		System.out.print("Enter a open port to work on (enter 0 for default): ");
-		int port = input.nextInt();
-		input.nextLine(); // clear the input
+//		int port = input.nextInt();
+//		input.nextLine(); // clear the input
+		int port = 5123; // Debug
 		Server clientConnection = new Server((port == 0) ? 5123 : port);
 
 		// Get a copy of the client's directory to compare to ours
@@ -134,23 +135,30 @@ public class Main {
 		// Take in the directory we want to compare with
 		System.out.println("Enter the path of the directory you want to compare with"
 				+ " (directory that contains the update the client is looking for).");
-		String src = FilenameUtils.normalize(input.nextLine());
+//		String src = FilenameUtils.normalize(input.nextLine());
+		String src = FilenameUtils.normalize(
+				"F:\\Learning Videos\\ASPNET\\Building a RESTful API with ASP.NET Core 3\\03. Structuring and Implementing the Outer Facing Contract"); // Debug
 		ItemTracker it = new ItemTracker(src, null);
 		try {
 			// Time to compare the two directory content
 			System.out.println("Checking directory for update.");
 			boolean hasItemToTransfer = it.remoteDetectDiffernce(clientDirInfo);
-			System.out.printf("%s", hasItemToTransfer ? "Preparing files to upload..." : "Nothing to give!");
+			System.out.printf("\n%s", hasItemToTransfer ? "Preparing files to upload..." : "Nothing to give!");
 			if (hasItemToTransfer) {
 				int verifiedStatus = clientConnection.sendAvailableFileNamesToTransfer(src, it.getFilesToTransfer());
 				if (verifiedStatus == 0)
 					clientConnection.startUploading(it.getFilesToTransfer());
 				else if (verifiedStatus == -1) {
 					/// If client data test sent failed
-					System.out.println("Trying again... ");
-					verifiedStatus = clientConnection.sendAvailableFileNamesToTransfer(src, it.getFilesToTransfer());
-					if (verifiedStatus == 1)
-						clientConnection.startUploading(it.getFilesToTransfer());
+					if (clientConnection.expectFromClient(1)) {
+						System.out.println("Trying again... ");
+						verifiedStatus = clientConnection.sendAvailableFileNamesToTransfer(src,
+								it.getFilesToTransfer());
+						if (verifiedStatus == 1)
+							clientConnection.startUploading(it.getFilesToTransfer());
+					} else {
+						System.out.println("Aborting connection (client does not want to retry)");
+					}
 				}
 				clientConnection.closeSocket();
 			} else {

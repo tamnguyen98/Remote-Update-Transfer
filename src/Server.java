@@ -79,12 +79,11 @@ public class Server {
 
 		int confirmedFileCount;
 		try {
-			out.writeInt(fileNamesCollections.length());
-			out.flush();
+			out.writeInt(fileNamesCollections.length() + 2);
 			out.writeUTF(fileNamesCollections);
 			out.flush();
 			confirmedFileCount = input.readInt();
-			System.out.println("\rREADY\nVerifying with client... " + confirmedFileCount);
+			System.out.printf("READY\nVerifying with client... " + confirmedFileCount);
 			if (confirmedFileCount != count) {
 				System.err.printf("UH OH, Client only thinks we're transfering %d when it's actually %d\n",
 						confirmedFileCount, count);
@@ -117,15 +116,18 @@ public class Server {
 					String fName = listIterator.next().toString();
 					System.out.print("Uploading " + fName);
 					File f = new File(fName);
-					out.writeLong(f.length()); // send the filesize first
+					long fsize = f.length();
+					out.writeLong(fsize);
 					out.flush();
-					System.out.print(" with byte size of " + f.length() + "... ");
+					input.readInt();
+					System.out.print(" with byte size of " + fsize + "... ");
 					FileInputStream fis = new FileInputStream(f);
 					while ((n = fis.read(buf)) != -1) {
 						out.write(buf, 0, n);
 						out.flush();
 
 					}
+
 					System.out.println("DONE");
 					fis.close();
 				}
