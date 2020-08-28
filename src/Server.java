@@ -22,8 +22,14 @@ public class Server {
 		// starts server and waits for a connection
 		try {
 			server = new ServerSocket(port);
+			InetAddress inetAddress = InetAddress.getLocalHost();
 			
-			System.out.println("Server started on port " + server.getLocalPort());
+			System.out.printf("Server started on port %s%s%s\n", 
+					GlobalTools.ANSI_BLUE, server.getLocalPort(), GlobalTools.ANSI_RESET);
+			
+	        System.out.printf("Your device's\n%s\tIP Address: %s\n\t Host Name: %s%s\n", 
+	        	GlobalTools.ANSI_BLUE, inetAddress.getHostAddress(), inetAddress.getHostName(), GlobalTools.ANSI_RESET);
+			
 			System.out.println("Waiting for a client ...");
 
 			socket = server.accept();

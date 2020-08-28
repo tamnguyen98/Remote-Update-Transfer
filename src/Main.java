@@ -1,6 +1,7 @@
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -58,7 +59,7 @@ public class Main {
 	}
 
 	private static void actAsClient(int option) {
-		System.out.println("Enter the<IP:Port> of the server you're receiving the updates from: ");
+		System.out.println("Enter the <(HostName/IP):Port> of the server you're receiving the updates from: ");
 		input.nextLine(); // to start capturing input
 		String[] addy = input.nextLine().replaceAll("[<>]*", "").split(":"); // Remove<> brackets encase the user
 		// provides them and split it
@@ -132,29 +133,38 @@ public class Main {
 		int port = input.nextInt();
 		input.nextLine(); // clear the input
 		//		int port = 5123; // Debug
+		
 		Server clientConnection = new Server((port == 0) ? 5123 : port);
-
-		// Get a copy of the client's directory to compare to ours
+		
+		// Get a copy of the client's directory to compare to ours		
 		HashMap<String, Long> clientDirInfo = clientConnection.recieveClientDirectoryContent();
 		// Take in the directory we want to compare with
+		
 		System.out.printf("Enter the path of the directory you want to compare with (directory that contains the update the client is looking for).%s\n", 
 				GlobalTools.ANSI_CYAN);
+		
 		String src = FilenameUtils.normalize(input.nextLine());
 		//		String src = FilenameUtils.normalize("F:\\Learning Videos\\ASPNET\\Building a RESTful API with ASP.NET Core 3\\03. Structuring and Implementing the Outer Facing Contract"); // Debug
 		ItemTracker it = new ItemTracker(src, null);
+		
 		try {
 			// Time to compare the two directory content
 			System.out.println(GlobalTools.ANSI_RESET + "Checking directory for update.");
+			
 			boolean hasItemToTransfer = it.remoteDetectDiffernce(clientDirInfo);
+			
 			System.out.printf("%s", hasItemToTransfer ? "Preparing files to upload..." : "Nothing to give!");
+			
 			if (hasItemToTransfer) {
 				int verifiedStatus = clientConnection.sendAvailableFileNamesToTransfer(src, it.getFilesToTransfer());
+				
 				if (verifiedStatus == 0)
 					clientConnection.startUploading(it.getFilesToTransfer());
 				else if (verifiedStatus == -1) {
 					/// If client data test sent failed
 					if (clientConnection.expectFromClient(1)) {
 						System.out.println("Trying again... ");
+						
 						verifiedStatus = clientConnection.sendAvailableFileNamesToTransfer(src,
 							it.getFilesToTransfer());
 						if (verifiedStatus == 1)

@@ -16,7 +16,7 @@ public class GlobalTools {
 	public static String byteConversionSI(long bytes) {
 		// Convert Longs to B/kB/MB/GB/TB
 		if (-1000 < bytes && bytes < 1000) {
-			return bytes + " B";
+			return bytes + " Byte";
 		}
 		CharacterIterator ci = new StringCharacterIterator("kMGTPE");
 		while (bytes <= -999_950 || bytes >= 999_950) {
