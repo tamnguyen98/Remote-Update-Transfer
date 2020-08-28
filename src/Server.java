@@ -84,8 +84,8 @@ public class Server {
 			out.writeUTF(fileNamesCollections);
 			out.flush();
 			confirmedFileCount = input.readInt();
-			System.out.printf("%sREADY%s\nVerifying with client... Recieved (%s)\n", GlobalTools.ANSI_GREEN,
-					GlobalTools.ANSI_RESET, confirmedFileCount);
+			System.out.printf("%sREADY\nRecieved verfication from client.%s\n", GlobalTools.ANSI_GREEN,
+					GlobalTools.ANSI_RESET);
 			if (confirmedFileCount != count) {
 				System.err.printf("%sUH OH, Client only thinks we're transfering %d when it's actually %d\n",
 						GlobalTools.ANSI_RED, confirmedFileCount, count);
@@ -110,7 +110,7 @@ public class Server {
 	public void startUploading(ArrayList<Path> files) {
 		try {
 			if (input.readUTF().equals("S")) { // Wait until client gets ready
-				System.out.println("Client's ready, starting transfer...");
+				System.out.printf("Client's ready. %sStarting transfer...%s", GlobalTools.ANSI_GREEN, GlobalTools.ANSI_RESET);
 				Iterator<Path> listIterator = files.iterator();
 				byte[] buf = new byte[4092]; // buffer read from socket
 				int n = 0; // how much we've read
@@ -123,7 +123,7 @@ public class Server {
 					out.writeLong(fsize);
 					out.flush();
 					input.readInt();
-					System.out.printf(" with size of %s...", GlobalTools.byteConversionSI(fsize));
+					System.out.printf(" with size of %s%s%s...", GlobalTools.ANSI_BLUE, GlobalTools.byteConversionSI(fsize), GlobalTools.ANSI_RESET);
 					FileInputStream fis = new FileInputStream(f);
 					while ((n = fis.read(buf)) != -1) {
 						out.write(buf, 0, n);
