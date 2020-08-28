@@ -82,9 +82,11 @@ public class Server {
 		// and convert it to a string with ';' as delimiter
 		String fileNamesCollections = ":"; // Encase the client gets random characters
 		int count = 0;
+		long transferSize = 0;
 		
 		for (Path f: files) {
 			count++;
+			transferSize += f.toFile().length();
 			fileNamesCollections += FilenameUtils.normalize(f.toString().substring(dir.length() + 1)) + ";";
 		}
 		// Add ok to let the client know that's all of the file difference (really not
@@ -97,8 +99,8 @@ public class Server {
 			
 			int confirmedFileCount = input.readInt();
 			
-			System.out.printf("%sREADY\nRecieved verfication from client.%s\n", 
-					GlobalTools.ANSI_GREEN, GlobalTools.ANSI_RESET);
+			System.out.printf("%sREADY (Total size: %d).%s\n", 
+					GlobalTools.ANSI_GREEN, GlobalTools.byteConversionSI(transferSize), GlobalTools.ANSI_RESET);
 			
 			if (confirmedFileCount != count) {
 				System.err.printf("%sUH OH, Client only thinks we're transfering %d when it's actually %d\n",
@@ -128,7 +130,7 @@ public class Server {
 		try {
 			if (input.readUTF().equals("S")) { // Wait until client gets ready
 				
-				System.out.printf("Client's ready. %sStarting transfer...%s", 
+				System.out.printf("Client's ready. %sStarting transfer...%s\n", 
 					GlobalTools.ANSI_GREEN, GlobalTools.ANSI_RESET);
 				
 				Iterator<Path> listIterator = files.iterator();
