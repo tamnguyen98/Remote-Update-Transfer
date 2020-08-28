@@ -143,12 +143,12 @@ public class Server {
 					System.out.printf("Uploading %s%s%s", 
 						GlobalTools.ANSI_CYAN, fName, GlobalTools.ANSI_RESET);
 					
+					System.out.printf(" with size of %s%s%s...", 
+						GlobalTools.ANSI_BLUE, GlobalTools.byteConversionSI(fsize), GlobalTools.ANSI_RESET);
+					
 					out.writeLong(fsize);
 					out.flush();
 					input.readInt();
-					
-					System.out.printf(" with size of %s%s%s...", 
-						GlobalTools.ANSI_BLUE, GlobalTools.byteConversionSI(fsize), GlobalTools.ANSI_RESET);
 					
 					FileInputStream fis = new FileInputStream(f);
 					while ((n = fis.read(buf)) != -1) {
