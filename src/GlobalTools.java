@@ -25,4 +25,8 @@ public class GlobalTools {
 		}
 		return String.format("%.1f %cB", bytes / 1000.0, ci.current());
 	}
+
+	public static String boolToStatus(boolean val) {
+		return (val ? ANSI_GREEN + "TRUE" : ANSI_RED + "FALSE") + ANSI_RESET;
+	}
 }

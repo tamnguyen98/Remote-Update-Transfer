@@ -95,8 +95,7 @@ public class Server {
 				out.flush();
 				return -1;
 			} else {
-				System.out.printf("Client's value matches. %sClear to proceed.%s\n", GlobalTools.ANSI_GREEN,
-						GlobalTools.ANSI_RESET);
+				System.out.printf("Client's value matches. %sClear to proceed.%s\n", GlobalTools.ANSI_GREEN, GlobalTools.ANSI_RESET);
 				out.writeInt(confirmedFileCount);
 				out.flush();
 				return 0;

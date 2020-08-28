@@ -73,11 +73,12 @@ public class ItemTracker {
 
 	public void printNewFiles(ArrayList<Path> toPrint) {
 		int i = 0;
+		System.out.print(GlobalTools.ANSI_CYAN);
 		for (Path s : toPrint) {
 			System.out.println(s.toString());
 			i++;
 		}
-		System.out.println("Total fail count: " + i);
+		System.out.println(GlobalTools.ANSI_RESET + "Total fail count: " + i);
 	}
 
 	private void println(String s) {

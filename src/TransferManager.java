@@ -72,9 +72,9 @@ public class TransferManager {
 				c2cTransfer(f, newPath);
 				System.out.printf("Override Complete!\n");
 			} catch (Exception e) {
-				System.err.printf("Override Failed\n");
+				System.err.printf("%sOverride Failed\n", GlobalTools.ANSI_RED);
 				System.err.println("\tError msg: " + e.getMessage());
-				System.err.println("\t" + e.toString());
+				System.err.println("\t" + e.toString() + GlobalTools.ANSI_RESET);
 				failedTransfer.add(f);
 			}
 		}

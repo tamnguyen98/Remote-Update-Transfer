@@ -109,14 +109,17 @@ public class Main {
 						if (!serverConnection.receiveAbort()) // If we got the OK from server
 							serverConnection.startDownload(workingDir, incomingFiles);
 						else
-							System.out.printf("%sRetry failed again. Closing connection...%s\n", GlobalTools.ANSI_RED, GlobalTools.ANSI_RESET);
+							System.out.printf("%sRetry failed again. Closing connection...%s\n", GlobalTools.ANSI_RED,
+									GlobalTools.ANSI_RESET);
 					} catch (IOException e) {
-						System.err.printf("Error retrying to recieve update status: %s%s\n", GlobalTools.ANSI_RED, e.toString(), GlobalTools.ANSI_RESET);
+						System.err.printf("Error retrying to recieve update status: %s%s\n", GlobalTools.ANSI_RED,
+								e.toString(), GlobalTools.ANSI_RESET);
 					}
 				}
 
 			} else {
-				System.out.printf("%sRecieve OK from server to start file transfer!%s\n", GlobalTools.ANSI_GREEN, GlobalTools.ANSI_RESET);
+				System.out.printf("%sRecieve OK from server to start file transfer!%s\n", GlobalTools.ANSI_GREEN,
+						GlobalTools.ANSI_RESET);
 				serverConnection.startDownload(workingDir, incomingFiles);
 			}
 		} catch (IOException e) {
@@ -136,15 +139,15 @@ public class Main {
 		HashMap<String, Long> clientDirInfo = clientConnection.recieveClientDirectoryContent();
 		// Take in the directory we want to compare with
 		System.out.println("Enter the path of the directory you want to compare with"
-				+ " (directory that contains the update the client is looking for).");
+				+ " (directory that contains the update the client is looking for)." + GlobalTools.ANSI_CYAN);
 		String src = FilenameUtils.normalize(input.nextLine());
 //		String src = FilenameUtils.normalize("F:\\Learning Videos\\ASPNET\\Building a RESTful API with ASP.NET Core 3\\03. Structuring and Implementing the Outer Facing Contract"); // Debug
 		ItemTracker it = new ItemTracker(src, null);
 		try {
 			// Time to compare the two directory content
-			System.out.println("Checking directory for update.");
+			System.out.println(GlobalTools.ANSI_RESET + "Checking directory for update.");
 			boolean hasItemToTransfer = it.remoteDetectDiffernce(clientDirInfo);
-			System.out.printf("\n%s", hasItemToTransfer ? "Preparing files to upload..." : "Nothing to give!");
+			System.out.printf("%s", hasItemToTransfer ? "Preparing files to upload..." : "Nothing to give!");
 			if (hasItemToTransfer) {
 				int verifiedStatus = clientConnection.sendAvailableFileNamesToTransfer(src, it.getFilesToTransfer());
 				if (verifiedStatus == 0)
@@ -176,12 +179,14 @@ public class Main {
 		String transferToPath = "";
 
 		boolean overridePermission = (args.length > 0 && args[0].equals("-y"));
-		System.out.println("Override " + overridePermission);
+		System.out.printf("Override %s\n", GlobalTools.boolToStatus(overridePermission));
 
-		System.out.println("Please enter the path of the folder which you want to transfer (contains the update): ");
+		System.out.printf("Please enter the path of the folder which you want to transfer (contains the update): \n%s",
+				GlobalTools.ANSI_CYAN);
 		originalPath = input.nextLine();
 
-		System.out.println("Please enter the path of the transfer destination (outdated directory): ");
+		System.out.printf("%sPlease enter the path of the transfer destination (outdated directory): \n%s",
+				GlobalTools.ANSI_RESET, GlobalTools.ANSI_CYAN);
 		transferToPath = input.nextLine();
 
 		ItemTracker it = new ItemTracker(originalPath, transferToPath);
@@ -208,19 +213,17 @@ public class Main {
 				if (retries != null && failedTransfers.size() == retries.size()) {
 					System.out.println("Retries failed to transfer the following files:");
 					it.printNewFiles(retries);
-					println("Program completed somewhat successfully (not really).");
+					System.out.printf("%sProgram completed somewhat successfully (not really).%s\n",
+							GlobalTools.ANSI_RED, GlobalTools.ANSI_RESET);
 				} else
-					println("Program completed successfully.");
+					System.out.printf("%sProgram completed successfully.\n%s", GlobalTools.ANSI_GREEN,
+							GlobalTools.ANSI_RESET);
 			}
 		} else {
 			System.out.println("No difference in the two directories.");
 		}
 
 		input.close();
-	}
-
-	static void println(String s) {
-		System.out.println(s);
 	}
 
 }
