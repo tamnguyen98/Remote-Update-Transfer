@@ -19,35 +19,41 @@ public class TransferManager {
 		// Edit src's file path to know where to transfer to new destination
 		int srcLen = this._src.length();
 		String relativePath = filePath.substring(srcLen);
+		
 		return this._dest + relativePath;
 	}
 
 	public ArrayList<Path> transferFiles(ArrayList<Path> files) {
 		int i = 1;
 		ArrayList<Path> failedTransfer = new ArrayList<Path>();
+		
 		for (Path f : files) {
 			String newLocation = getNewFilePath(f.toString());
+			
 			System.out.printf("(%d/%d) Transfering %s to %s... ", i++, files.size(), f.getFileName(), newLocation);
+			
 			try {
 				Path newPath = Paths.get(newLocation);
+				
 				if (!newPath.toFile().exists()) {
 					newPath.toFile().getParentFile().mkdirs();
 					newPath.toFile().createNewFile();
 				}
 
 				if (newPath.toFile().canWrite()) {
-					c2cTransfer(f, newPath); // attempt 3
-					// Files.copy(f, newPath, StandardCopyOption.REPLACE_EXISTING); // Attempt 2
-					// FileUtils.copy(f.toFile(), newPath);
+					c2cTransfer(f, newPath);
+					
 					System.out.printf("Complete!\n");
 				} else {
 					System.err.printf("Failed!\nYou do not have permission to write to: %s\n", newLocation);
+					
 					failedTransfer.add(f);
 				}
 			} catch (Exception e) {
 				System.err.printf("Failed\n");
 				System.err.println("\tError msg: " + e.getMessage());
 				System.err.println("\t" + e.toString());
+				
 				failedTransfer.add(f);
 			}
 		}
@@ -58,11 +64,14 @@ public class TransferManager {
 	public ArrayList<Path> overrideCopy(ArrayList<Path> files) {
 		int i = 1;
 		ArrayList<Path> failedTransfer = new ArrayList<Path>();
+		
 		for (Path f : files) {
 			String newLocation = getNewFilePath(f.toString());
+			
 			System.out.printf("(%d/%d) Transfering (%s) %s to %s%s%s... ", i++, files.size(),
 					GlobalTools.byteConversionSI(f.toFile().length()), f.getFileName(), 
 					GlobalTools.ANSI_CYAN, newLocation, GlobalTools.ANSI_RESET);
+			
 			try {
 				Path newPath = Paths.get(newLocation);
 				generateDestination(newPath);
@@ -70,11 +79,13 @@ public class TransferManager {
 				newPath.toFile().delete();
 				generateDestination(newPath);
 				c2cTransfer(f, newPath);
+				
 				System.out.printf("Override Complete!\n");
 			} catch (Exception e) {
 				System.err.printf("%sOverride Failed\n", GlobalTools.ANSI_RED);
 				System.err.println("\tError msg: " + e.getMessage());
 				System.err.println("\t" + e.toString() + GlobalTools.ANSI_RESET);
+				
 				failedTransfer.add(f);
 			}
 		}

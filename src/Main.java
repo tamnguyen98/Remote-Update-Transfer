@@ -26,15 +26,15 @@ public class Main {
 		input.nextLine();
 
 		switch (option) {
-		case 1:
-			localTransfer(args);
-			break;
-		case 2:
-			remoteTransfer(args);
-			break;
-		default:
-			System.err.println("Input not recognized!");
-			break;
+			case 1:
+				localTransfer(args);
+				break;
+			case 2:
+				remoteTransfer(args);
+				break;
+			default:
+				System.err.println("Input not recognized!");
+				break;
 		}
 
 	}
@@ -44,36 +44,35 @@ public class Main {
 		int option = input.nextInt();
 
 		switch (option) {
-		case 1: // Receiving
-			actAsClient(option);
-			break;
-		case 2: // sending
-			actAsServer();
-			break;
-		default:
-			System.err.println("Input not recognized!");
-			remoteTransfer(args);
-			return;
+			case 1: // Receiving
+				actAsClient(option);
+				break;
+			case 2: // sending
+				actAsServer();
+				break;
+			default:
+				System.err.println("Input not recognized!");
+				remoteTransfer(args);
+				return;
 		}
 	}
 
 	private static void actAsClient(int option) {
-		System.out.println("Enter the <IP:Port> of the server you're receiving the updates from: ");
+		System.out.println("Enter the<IP:Port> of the server you're receiving the updates from: ");
 		input.nextLine(); // to start capturing input
-		String[] addy = input.nextLine().replaceAll("[<>]*", "").split(":"); // Remove <> brackets encase the user
+		String[] addy = input.nextLine().replaceAll("[<>]*", "").split(":"); // Remove<> brackets encase the user
 		// provides them and split it
 		Client serverConnection = new Client(addy[0], Integer.parseInt(addy[1]));
-//		Client serverConnection = new Client("localhost", 5123); // for testing
+		//		Client serverConnection = new Client("localhost", 5123); // for testing
 		DataOutputStream cOut = serverConnection.sender(); // connection output
 
 		System.out.print("Enter the directory where you want the updates to be downloaded to: ");
 		String workingDir = FilenameUtils.normalize(input.nextLine());
-//		String workingDir = "F:\\GitHub\\Remote-Update-Transfer\\bin\\tmp"; // for testing
+		//		String workingDir = "F:\\GitHub\\Remote-Update-Transfer\\bin\\tmp"; // for testing
 		File dir = new File(workingDir);
 		while (!dir.canWrite()) {
-			System.out.print(GlobalTools.ANSI_RED + "Sorry, you don't have write permission to this directory. "
-					+ GlobalTools.ANSI_RESET
-					+ "\nEither enter a new directory or gain write access to this directory: ");
+			System.out.print(GlobalTools.ANSI_RED + "Sorry, you don't have write permission to this directory. " +
+				GlobalTools.ANSI_RESET + "\nEither enter a new directory or gain write access to this directory: ");
 			workingDir = FilenameUtils.normalize(input.nextLine());
 			dir = new File(workingDir);
 		}
@@ -98,8 +97,8 @@ public class Main {
 			if (serverConnection.receiveAbort()) {
 				// Fail in communication
 				System.out.printf(
-						"%sRecieve abort from server (possible due to missing files).%s\nWould you like to retry (1) or no(0)? ",
-						GlobalTools.ANSI_RED, GlobalTools.ANSI_RESET);
+					"%sRecieve abort from server (possible due to missing files).%s\nWould you like to retry (1) or no(0)? ",
+					GlobalTools.ANSI_RED, GlobalTools.ANSI_RESET);
 				option = input.nextInt();
 				input.nextLine(); // To clear the input
 				if (option == 1) { // Check to see if user want to retry
@@ -110,16 +109,16 @@ public class Main {
 							serverConnection.startDownload(workingDir, incomingFiles);
 						else
 							System.out.printf("%sRetry failed again. Closing connection...%s\n", GlobalTools.ANSI_RED,
-									GlobalTools.ANSI_RESET);
+								GlobalTools.ANSI_RESET);
 					} catch (IOException e) {
 						System.err.printf("Error retrying to recieve update status: %s%s\n", GlobalTools.ANSI_RED,
-								e.toString(), GlobalTools.ANSI_RESET);
+							e.toString(), GlobalTools.ANSI_RESET);
 					}
 				}
 
 			} else {
 				System.out.printf("%sRecieve OK from server to start file transfer!%s\n", GlobalTools.ANSI_GREEN,
-						GlobalTools.ANSI_RESET);
+					GlobalTools.ANSI_RESET);
 				serverConnection.startDownload(workingDir, incomingFiles);
 			}
 		} catch (IOException e) {
@@ -132,16 +131,16 @@ public class Main {
 		System.out.print("Enter a open port to work on (enter 0 for default): ");
 		int port = input.nextInt();
 		input.nextLine(); // clear the input
-//		int port = 5123; // Debug
+		//		int port = 5123; // Debug
 		Server clientConnection = new Server((port == 0) ? 5123 : port);
 
 		// Get a copy of the client's directory to compare to ours
 		HashMap<String, Long> clientDirInfo = clientConnection.recieveClientDirectoryContent();
 		// Take in the directory we want to compare with
-		System.out.println("Enter the path of the directory you want to compare with"
-				+ " (directory that contains the update the client is looking for)." + GlobalTools.ANSI_CYAN);
+		System.out.printf("Enter the path of the directory you want to compare with (directory that contains the update the client is looking for).%s\n", 
+				GlobalTools.ANSI_CYAN);
 		String src = FilenameUtils.normalize(input.nextLine());
-//		String src = FilenameUtils.normalize("F:\\Learning Videos\\ASPNET\\Building a RESTful API with ASP.NET Core 3\\03. Structuring and Implementing the Outer Facing Contract"); // Debug
+		//		String src = FilenameUtils.normalize("F:\\Learning Videos\\ASPNET\\Building a RESTful API with ASP.NET Core 3\\03. Structuring and Implementing the Outer Facing Contract"); // Debug
 		ItemTracker it = new ItemTracker(src, null);
 		try {
 			// Time to compare the two directory content
@@ -157,7 +156,7 @@ public class Main {
 					if (clientConnection.expectFromClient(1)) {
 						System.out.println("Trying again... ");
 						verifiedStatus = clientConnection.sendAvailableFileNamesToTransfer(src,
-								it.getFilesToTransfer());
+							it.getFilesToTransfer());
 						if (verifiedStatus == 1)
 							clientConnection.startUploading(it.getFilesToTransfer());
 					} else {
@@ -182,11 +181,11 @@ public class Main {
 		System.out.printf("Override %s\n", GlobalTools.boolToStatus(overridePermission));
 
 		System.out.printf("Please enter the path of the folder which you want to transfer (contains the update): \n%s",
-				GlobalTools.ANSI_CYAN);
+			GlobalTools.ANSI_CYAN);
 		originalPath = input.nextLine();
 
 		System.out.printf("%sPlease enter the path of the transfer destination (outdated directory): \n%s",
-				GlobalTools.ANSI_RESET, GlobalTools.ANSI_CYAN);
+			GlobalTools.ANSI_RESET, GlobalTools.ANSI_CYAN);
 		transferToPath = input.nextLine();
 
 		ItemTracker it = new ItemTracker(originalPath, transferToPath);
@@ -214,10 +213,10 @@ public class Main {
 					System.out.println("Retries failed to transfer the following files:");
 					it.printNewFiles(retries);
 					System.out.printf("%sProgram completed somewhat successfully (not really).%s\n",
-							GlobalTools.ANSI_RED, GlobalTools.ANSI_RESET);
+						GlobalTools.ANSI_RED, GlobalTools.ANSI_RESET);
 				} else
-					System.out.printf("%sProgram completed successfully.\n%s", GlobalTools.ANSI_GREEN,
-							GlobalTools.ANSI_RESET);
+					System.out.printf("%sProgram completed successfully.\n%s", 
+						GlobalTools.ANSI_GREEN, GlobalTools.ANSI_RESET);
 			}
 		} else {
 			System.out.println("No difference in the two directories.");
