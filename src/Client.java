@@ -1,13 +1,8 @@
 import java.net.*;
-import java.text.CharacterIterator;
-import java.text.StringCharacterIterator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.*;
@@ -83,21 +78,23 @@ public class Client {
 		try {
 
 			String newFilesCollections = "";
+			String filelist = FilenameUtils.normalize(toDir + "\\.newfiles");
 			// Only reason I'm using a buffer instead of readUTF is encase there is a large
 			// quantity of files difference
 			byte[] buf = new byte[4092];
 			String bToString = "";
 			int size = input.readInt();
 			int n = 0; // read count
+
 			while (size > 0 && (n = input.read(buf, 0, Math.min(buf.length, size))) > -1) {
 				size -= n;
 				bToString += new String(buf, 0, n);
 			}
 			newFilesCollections += bToString.substring(bToString.indexOf(':') + 1);
 
-			System.out.println("Initializing a temp file of all files to be downloaded to " + GlobalTools.ANSI_CYAN
-					+ toDir + "\\.newfiles" + GlobalTools.ANSI_RESET);
-			FileOutputStream tmpListFile = new FileOutputStream(toDir + "\\.newfiles");
+			System.out.printf("Initializing a temp file of all files to be downloaded to %s%s%s\n",
+					GlobalTools.ANSI_CYAN, filelist, GlobalTools.ANSI_RESET);
+			FileOutputStream tmpListFile = new FileOutputStream(filelist);
 			int filesCount = 0;
 			for (String s : newFilesCollections.split(";")) {
 				filesCount++;
