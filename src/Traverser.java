@@ -4,7 +4,9 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Comparator;
 
 public class Traverser implements FileVisitor<Path> {
 	private int fileCount;
@@ -89,6 +91,14 @@ public class Traverser implements FileVisitor<Path> {
 	public ArrayList<Path> getNewFiles() {
 		if (this._newFiles.isEmpty())
 			System.err.println("ArrayList empty");
+		else {
+			Collections.sort(this._newFiles, new Comparator<Path>() {
+				@Override
+				public int compare(Path p1, Path p2) {
+					return Long.compare(p1.toFile().length(), p2.toFile().length());
+				}
+			});
+		}
 		return this._newFiles;
 	}
 

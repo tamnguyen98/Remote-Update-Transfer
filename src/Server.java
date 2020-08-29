@@ -1,3 +1,4 @@
+
 // Server has the update files to give to client
 import java.net.*;
 import java.nio.file.Path;
@@ -23,20 +24,19 @@ public class Server {
 		try {
 			server = new ServerSocket(port);
 			InetAddress inetAddress = InetAddress.getLocalHost();
-			
-			System.out.printf("Server started on port %s%s%s\n", 
-					GlobalTools.ANSI_BLUE, server.getLocalPort(), GlobalTools.ANSI_RESET);
-			
-	        System.out.printf("Your device's\n%s\tIP Address: %s\n\t Host Name: %s%s\n", 
-	        	GlobalTools.ANSI_BLUE, inetAddress.getHostAddress(), inetAddress.getHostName(), GlobalTools.ANSI_RESET);
-			
+
+			System.out.printf("Server started on port %s%s%s\n", GlobalTools.ANSI_BLUE, server.getLocalPort(),
+					GlobalTools.ANSI_RESET);
+
+			System.out.printf("Your device's\n%s\tIP Address: %s\n\t Host Name: %s%s\n", GlobalTools.ANSI_BLUE,
+					inetAddress.getHostAddress(), inetAddress.getHostName(), GlobalTools.ANSI_RESET);
+
 			System.out.println("Waiting for a client ...");
 
 			socket = server.accept();
-			
-			System.out.printf("%sClient accepted%s\n", 
-				GlobalTools.ANSI_GREEN, GlobalTools.ANSI_RESET);
-			
+
+			System.out.printf("%sClient accepted%s\n", GlobalTools.ANSI_GREEN, GlobalTools.ANSI_RESET);
+
 			input = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 			out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 
@@ -47,13 +47,13 @@ public class Server {
 
 	public HashMap<String, Long> recieveClientDirectoryContent() {
 		try {
-			HashMap<String, Long> clientDir = new HashMap<String, Long> ();
+			HashMap<String, Long> clientDir = new HashMap<String, Long>();
 			String data = input.readUTF();
-			
+
 			if (!data.contains(";E;")) {
-				//				System.out.println(data.replace(";", "\n"));
+				// System.out.println(data.replace(";", "\n"));
 				int i = 0;
-				for (String s: data.split(";")) {
+				for (String s : data.split(";")) {
 					if (i == 0) {
 						i++;
 					} else {
@@ -65,10 +65,10 @@ public class Server {
 
 			out.write("OK".getBytes());
 			out.flush();
-			
-			System.out.printf("Client would like to recieve files for %s%s%s\n", 
-				GlobalTools.ANSI_CYAN, data.substring(0, data.indexOf(";")), GlobalTools.ANSI_RESET);
-			
+
+			System.out.printf("Client would like to recieve files for %s%s%s\n", GlobalTools.ANSI_CYAN,
+					data.substring(0, data.indexOf(";")), GlobalTools.ANSI_RESET);
+
 			return clientDir;
 
 		} catch (IOException e) {
@@ -83,8 +83,8 @@ public class Server {
 		String fileNamesCollections = ":"; // Encase the client gets random characters
 		int count = 0;
 		long transferSize = 0;
-		
-		for (Path f: files) {
+
+		for (Path f : files) {
 			count++;
 			transferSize += f.toFile().length();
 			fileNamesCollections += FilenameUtils.normalize(f.toString().substring(dir.length() + 1)) + ";";
@@ -96,25 +96,25 @@ public class Server {
 			out.writeInt(fileNamesCollections.length() + 2);
 			out.writeUTF(fileNamesCollections);
 			out.flush();
-			
+
 			int confirmedFileCount = input.readInt();
-			
-			System.out.printf("%sREADY (Total size: %d).%s\n", 
-					GlobalTools.ANSI_GREEN, GlobalTools.byteConversionSI(transferSize), GlobalTools.ANSI_RESET);
-			
+
+			System.out.printf("%sREADY (Total size: %s).%s\n", GlobalTools.ANSI_GREEN,
+					GlobalTools.byteConversionSI(transferSize), GlobalTools.ANSI_RESET);
+
 			if (confirmedFileCount != count) {
 				System.err.printf("%sUH OH, Client only thinks we're transfering %d when it's actually %d\n",
-					GlobalTools.ANSI_RED, confirmedFileCount, count);
+						GlobalTools.ANSI_RED, confirmedFileCount, count);
 				System.out.printf("Error occured before files transfer, telling client to abort%s\n",
-					GlobalTools.ANSI_RESET);
-				
+						GlobalTools.ANSI_RESET);
+
 				out.writeInt(-1);
 				out.flush();
 				return -1;
 			} else {
-				System.out.printf("Client's value matches. %sClear to proceed.%s\n", 
-					GlobalTools.ANSI_GREEN, GlobalTools.ANSI_RESET);
-				
+				System.out.printf("Client's value matches. %sClear to proceed.%s\n", GlobalTools.ANSI_GREEN,
+						GlobalTools.ANSI_RESET);
+
 				out.writeInt(confirmedFileCount);
 				out.flush();
 				return 0;
@@ -129,10 +129,10 @@ public class Server {
 	public void startUploading(ArrayList<Path> files) {
 		try {
 			if (input.readUTF().equals("S")) { // Wait until client gets ready
-				
-				System.out.printf("Client's ready. %sStarting transfer...%s\n", 
-					GlobalTools.ANSI_GREEN, GlobalTools.ANSI_RESET);
-				
+
+				System.out.printf("Client's ready. %sStarting transfer...%s\n", GlobalTools.ANSI_GREEN,
+						GlobalTools.ANSI_RESET);
+
 				Iterator<Path> listIterator = files.iterator();
 				byte[] buf = new byte[4092]; // buffer read from socket
 				int n = 0; // how much we've read
@@ -141,17 +141,16 @@ public class Server {
 					String fName = listIterator.next().toString();
 					File f = new File(fName);
 					long fsize = f.length();
-					
-					System.out.printf("Uploading %s%s%s", 
-						GlobalTools.ANSI_CYAN, fName, GlobalTools.ANSI_RESET);
-					
-					System.out.printf(" with size of %s%s%s...", 
-						GlobalTools.ANSI_BLUE, GlobalTools.byteConversionSI(fsize), GlobalTools.ANSI_RESET);
-					
+
+					System.out.printf("Uploading %s%s%s", GlobalTools.ANSI_CYAN, fName, GlobalTools.ANSI_RESET);
+
+					System.out.printf(" with size of %s%s%s...", GlobalTools.ANSI_BLUE,
+							GlobalTools.byteConversionSI(fsize), GlobalTools.ANSI_RESET);
+
 					out.writeLong(fsize);
 					out.flush();
 					input.readInt();
-					
+
 					FileInputStream fis = new FileInputStream(f);
 					while ((n = fis.read(buf)) != -1) {
 						out.write(buf, 0, n);
